@@ -1,48 +1,94 @@
 import React, { useEffect, useState, useRef } from "react";
 
 const Message = () => {
-  const [messages, setMessages] = useState([]);
-  const [loadMore, setLoadMore] = useState(false);
-  const scrollContainerRef = useRef(null); // Reference to the scroll container
+  const [displayedMessages, setDisplayedMessages] = useState([]);
+  const [messageIndex, setMessageIndex] = useState(0);
+  const scrollContainerRef = useRef(null);
 
-  const addMessagesToTop = () => {
-    const newMessages = [];
-    for (let i = messages.length; i < messages.length + 20; i++) {
-      newMessages.unshift(i); // Add new messages at the beginning
-    }
+  const initialMessages = [
+    {
+      sender: { fullName: "Koushik S R", employeeId: "qugates-04" },
+      content: "testng",
+      createdAt: "2024-11-09T10:41:48.298Z",
+      _id: "672f3c6c73e3f13eeaa4c92e",
+    },
+    {
+      sender: { fullName: "Koushik S R", employeeId: "qugates-04" },
+      content: "testing",
+      createdAt: "2024-11-09T10:41:51.403Z",
+      _id: "672f3c6f73e3f13eeaa4c943",
+    },
+    {
+      sender: { fullName: "Koushik S R", employeeId: "qugates-04" },
+      content: "testing",
+      createdAt: "2024-11-09T10:41:54.289Z",
+      _id: "672f3c7273e3f13eeaa4c958",
+    },
+    {
+      sender: { fullName: "Niroj Shah", employeeId: "qugates-05" },
+      content: "sss",
+      createdAt: "2024-11-09T10:42:15.899Z",
+      _id: "672f3c8773e3f13eeaa4c987",
+    },
+    {
+      sender: { fullName: "Niroj Shah", employeeId: "qugates-05" },
+      content: "ss",
+      createdAt: "2024-11-09T10:42:33.508Z",
+      _id: "672f3c9973e3f13eeaa4c99c",
+    },
+    {
+      sender: { fullName: "Koushik S R", employeeId: "qugates-04" },
+      content: "testing",
+      createdAt: "2024-11-09T10:42:49.557Z",
+      _id: "672f3ca973e3f13eeaa4c9d4",
+    },
+    {
+      sender: { fullName: "Niroj Shah", employeeId: "qugates-05" },
+      content: "testing",
+      createdAt: "2024-11-09T10:43:31.425Z",
+      _id: "672f3cd373e3f13eeaa4ca62",
+    },
+    {
+      sender: { fullName: "Koushik S R", employeeId: "qugates-04" },
+      content: "test",
+      createdAt: "2024-11-09T10:44:00.087Z",
+      _id: "672f3cf073e3f13eeaa4ca91",
+    },
+  ];
 
-    // Get the current scroll height before adding new messages
-    const scrollHeightBeforeLoad = scrollContainerRef.current.scrollHeight;
-
-    setMessages((prevMessages) => [...newMessages, ...prevMessages]);
-
-    // Adjust scroll position after adding new messages to keep the view in place
-    setTimeout(() => {
-      const scrollHeightAfterLoad = scrollContainerRef.current.scrollHeight;
-      scrollContainerRef.current.scrollTop +=
-        scrollHeightAfterLoad - scrollHeightBeforeLoad;
-    }, 0);
+  // Add messages in chunks of 5 when scrolling to the top
+  const addMessages = () => {
+    const newMessages = initialMessages;
+    setDisplayedMessages((prevMessages) => [...newMessages, ...prevMessages]);
+    setMessageIndex((prevIndex) => prevIndex + 5);
   };
 
   useEffect(() => {
-    // Initialize with the first 20 numbers on mount
-    const initialMessages = Array.from({ length: 20 }, (_, i) => i);
-    setMessages(initialMessages);
+    // Initially load the first 5 messages
+    addMessages();
   }, []);
 
+  // Handle the scroll event to load more messages when the user scrolls to the top
   useEffect(() => {
-    if (loadMore) {
-      addMessagesToTop();
-      setLoadMore(false); // Reset loadMore state after loading
-    }
-  }, [loadMore]);
+    const scrollContainer = scrollContainerRef.current;
 
-  const handleScroll = () => {
-    // Trigger loadMore when scrolled to the top
-    if (scrollContainerRef.current.scrollTop === 0) {
-      setLoadMore(true);
+    const handleScroll = () => {
+      if (scrollContainer.scrollTop <= 0) {
+        addMessages(); // Add new messages only if scrolled to the top
+      }
+    };
+
+    const container = scrollContainer.current;
+    if (container) {
+      container.addEventListener("scroll", handleScroll);
     }
-  };
+
+    return () => {
+      if (container) {
+        container.removeEventListener("scroll", handleScroll);
+      }
+    };
+  }, [messageIndex]);
 
   return (
     <div
@@ -59,7 +105,6 @@ const Message = () => {
     >
       <div
         ref={scrollContainerRef}
-        onScroll={handleScroll}
         style={{
           width: "70%",
           height: "90%",
@@ -70,24 +115,27 @@ const Message = () => {
           gap: "10px",
           overflowX: "hidden",
           scrollbarWidth: "thin",
+          flexDirection: "column-reverse",
         }}
       >
-        {messages.map((val, key) => (
+        {displayedMessages.map((message, index) => (
           <div
-            key={key}
+            key={message._id}
             style={{
               height: "50px",
               width: "100%",
               border: "1px solid blue",
-              background: key === 0 ? "blue" : "none",
+              background: index === 0 ? "blue" : "none",
             }}
           >
-            <p style={{ textAlign: "center" }}>{val}</p>
+            <p style={{ textAlign: "center" }}>
+              {message.sender.fullName}: {message.content}
+            </p>
           </div>
         ))}
       </div>
 
-      <button onClick={addMessagesToTop}>Add More Messages</button>
+      <button onClick={addMessages}>Add More Messages</button>
     </div>
   );
 };
