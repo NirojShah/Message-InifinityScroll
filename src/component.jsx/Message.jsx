@@ -15,13 +15,13 @@ const Message = () => {
     {
       sender: { fullName: "Koushik S R", employeeId: "qugates-04" },
       content: "testing",
-      createdAt: "2024-11-09T10:41:51.403Z",
+      createdAt: "2024-11-08T10:41:51.403Z",
       _id: "672f3c6f73e3f13eeaa4c943",
     },
     {
       sender: { fullName: "Koushik S R", employeeId: "qugates-04" },
       content: "testing",
-      createdAt: "2024-11-09T10:41:54.289Z",
+      createdAt: "2024-11-08T10:41:54.289Z",
       _id: "672f3c7273e3f13eeaa4c958",
     },
     {
@@ -56,6 +56,11 @@ const Message = () => {
     },
   ];
 
+  const formatDate = (dateString) => {
+    const options = { year: "numeric", month: "long", day: "numeric" };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+  };
+
   // Add messages in chunks of 5 when scrolling to the top
   const addMessages = () => {
     const newMessages = initialMessages;
@@ -67,6 +72,27 @@ const Message = () => {
     // Initially load the first 5 messages
     addMessages();
   }, []);
+
+  // Group messages by date and handle adding messages without duplicating the date
+  const getGroupedMessages = (messages) => {
+    const groupedMessages = [];
+    let lastDate = null;
+
+    messages.forEach((message) => {
+      const messageDate = formatDate(message.createdAt);
+
+      if (messageDate !== lastDate) {
+        groupedMessages.push({ type: "date", date: messageDate });
+        lastDate = messageDate;
+      }
+
+      groupedMessages.push({ type: "message", ...message });
+    });
+
+    return groupedMessages;
+  };
+
+  const groupedMessages = getGroupedMessages(displayedMessages);
 
   // Handle the scroll event to load more messages when the user scrolls to the top
   useEffect(() => {
@@ -118,21 +144,27 @@ const Message = () => {
           flexDirection: "column-reverse",
         }}
       >
-        {displayedMessages.map((message, index) => (
-          <div
-            key={message._id}
-            style={{
-              height: "50px",
-              width: "100%",
-              border: "1px solid blue",
-              background: index === 0 ? "blue" : "none",
-            }}
-          >
-            <p style={{ textAlign: "center" }}>
-              {message.sender.fullName}: {message.content}
+        {groupedMessages.map((item, index) =>
+          item.type === "date" ? (
+            <p key={index} style={{ textAlign: "center", fontWeight: "bold" }}>
+              {item.date}
             </p>
-          </div>
-        ))}
+          ) : (
+            <div
+              key={item._id}
+              style={{
+                height: "50px",
+                width: "100%",
+                border: "1px solid blue",
+                background: index === 0 ? "blue" : "none",
+              }}
+            >
+              <p style={{ textAlign: "center" }}>
+                {item.sender.fullName}: {item.content}
+              </p>
+            </div>
+          )
+        )}
       </div>
 
       <button onClick={addMessages}>Add More Messages</button>
